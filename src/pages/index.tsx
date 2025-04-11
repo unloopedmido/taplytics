@@ -17,16 +17,23 @@ export default function Home() {
 
 	const {time, clearTimer, startTimer} = useTimer();
 
-	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
 	const generateWords = async () => {
 		if (mode === "quote") {
-			setQuoteLoading(true);
-			const request = await fetch("https://api.quotable.io/random");
-			const quote = (await request.json()) as { content: string };
-			setFullText(quote.content ?? "");
-			setQuoteLoading(false);
+			try {
+				setQuoteLoading(true);
+				const request = await fetch("https://api.quotable.io/random");
+				if (!request.ok) {
+					throw new Error("Failed to fetch quote");
+				}
+				const quote = (await request.json()) as { content: string };
+				setFullText(quote.content ?? "");
+			} catch (error) {
+				console.error("Error fetching quote:", error);
+			} finally {
+				setQuoteLoading(false);
+			}
 
 			return;
 		}
@@ -89,15 +96,6 @@ export default function Home() {
 			}
 		}
 	}, [finished, stats, time]);
-
-	useEffect(() => {
-		return () => {
-			if (intervalRef.current) {
-				clearInterval(intervalRef.current);
-				intervalRef.current = null;
-			}
-		};
-	}, []);
 
 	const handleInputChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
