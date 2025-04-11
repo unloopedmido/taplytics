@@ -15,7 +15,7 @@ export default function Home() {
 	const [finished, setFinished] = useState(false);
 	const [quoteLoading, setQuoteLoading] = useState(false);
 
-	const {time, clearTimer, startTimer} = useTimer();
+	const { time, clearTimer, startTimer } = useTimer();
 
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -50,10 +50,7 @@ export default function Home() {
 		startTimer();
 		void generateWords();
 		inputRef.current?.focus();
-
 	};
-
-
 
 	const stats = useMemo(() => {
 		if (time === 0) return { wpm: 0, accuracy: 0 };
@@ -123,7 +120,7 @@ export default function Home() {
 
 	if (quoteLoading) {
 		return (
-			<div className="flex items-center justify-center fixed inset-0">
+			<div role="status" aria-live="polite" className="flex items-center justify-center fixed inset-0">
 				<h1 className="text-3xl font-bold">Loading...</h1>
 			</div>
 		);
@@ -149,12 +146,12 @@ export default function Home() {
 				{/* Stats Bar */}
 				{started && (
 					<div className="mb-10 flex justify-center">
-						<div className="flex gap-8 px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-lg">
+						<div role="region" aria-label="Typing statistics" className="flex gap-8 px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-lg">
 							<div className="flex flex-col items-center">
 								<span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">
 									WPM
 								</span>
-								<span className="text-3xl font-bold bg-gradient-to-r from-cyan-300 to-cyan-100 bg-clip-text text-transparent">
+								<span aria-live="polite" className="text-3xl font-bold bg-gradient-to-r from-cyan-300 to-cyan-100 bg-clip-text text-transparent">
 									{stats.wpm}
 								</span>
 							</div>
@@ -164,7 +161,7 @@ export default function Home() {
 								<span className="text-xs font-bold text-green-300 uppercase tracking-wider">
 									Accuracy
 								</span>
-								<span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-green-100 bg-clip-text text-transparent">
+								<span aria-live="polite" className="text-3xl font-bold bg-gradient-to-r from-green-300 to-green-100 bg-clip-text text-transparent">
 									{stats.accuracy}%
 								</span>
 							</div>
@@ -185,7 +182,17 @@ export default function Home() {
 				{/* Typing Area */}
 				<div className="max-w-4xl mx-auto">
 					{started && (
-						<div className="w-full h-2 bg-slate-800 rounded overflow-hidden mb-4">
+						<div
+							role="progressbar"
+							aria-label="Typing progress"
+							aria-valuemin={0}
+							aria-valuemax={100}
+							aria-valuenow={Math.min(
+								(userInput.length / fullText.length) * 100,
+								100
+							)}
+							className="w-full h-2 bg-slate-800 rounded overflow-hidden mb-4"
+						>
 							<div
 								className="h-full bg-cyan-400 transition-all duration-200"
 								style={{
@@ -203,6 +210,9 @@ export default function Home() {
 							className={`relative p-8 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 mb-8 shadow-lg ${
 								started ? "" : "opacity-75"
 							}`}
+							aria-label="Text to type"
+							role="textbox"
+							aria-readonly="true"
 						>
 							<div className="flex flex-wrap text-2xl text-slate-400 gap-1 leading-relaxed tracking-wide">
 								{fullText.split("").map((char, i) => {
@@ -248,6 +258,9 @@ export default function Home() {
 									}
 								}, 500);
 							}}
+							aria-label="Typing test input"
+							aria-live="polite"
+							autoComplete="off"
 						/>
 					)}
 
@@ -256,12 +269,14 @@ export default function Home() {
 							<button
 								onClick={startGame}
 								className="bg-pink-800 hover:bg-pink-700 transition-colors py-2 px-4 rounded-lg w-full"
+								aria-label="Restart typing test"
 							>
 								Restart
 							</button>
 							<button
 								className="bg-red-800 hover:bg-red-700 transition-colors py-2 px-4 rounded-lg w-full"
 								onClick={handleGoBack}
+								aria-label="Go back to the main menu"
 							>
 								Go Back
 							</button>
