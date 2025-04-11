@@ -1,15 +1,9 @@
 import FinishScreen from "@/components/typing/FinishScreen";
 import StartScreen from "@/components/typing/StartScreen";
 import StatsScreen from "@/components/typing/StatsScreen";
+import { useTimer } from "@/hooks/useTimer";
 import { generate } from "random-words";
-import {
-	ChangeEvent,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function Home() {
 	const [mode, setMode] = useState<"words" | "quote">("words");
@@ -17,10 +11,11 @@ export default function Home() {
 	const [fullText, setFullText] = useState("");
 	const [userInput, setUserInput] = useState("");
 	const [correctChars, setCorrectChars] = useState(0);
-	const [time, setTime] = useState(0);
 	const [started, setStarted] = useState(false);
 	const [finished, setFinished] = useState(false);
 	const [quoteLoading, setQuoteLoading] = useState(false);
+
+	const {time, clearTimer, startTimer} = useTimer();
 
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const inputRef = useRef<HTMLInputElement | null>(null);
@@ -45,24 +40,13 @@ export default function Home() {
 		setFinished(false);
 		setUserInput("");
 		setCorrectChars(0);
-		setTime(0);
+		startTimer();
 		void generateWords();
 		inputRef.current?.focus();
 
-		if (intervalRef.current) clearInterval(intervalRef.current);
-		intervalRef.current = setInterval(() => {
-			setTime((prev) => prev + 1);
-		}, 1000);
 	};
 
-	const endGame = () => {
-		setStarted(false);
-		setFinished(true);
-		if (intervalRef.current) {
-			clearInterval(intervalRef.current);
-			intervalRef.current = null;
-		}
-	};
+
 
 	const stats = useMemo(() => {
 		if (time === 0) return { wpm: 0, accuracy: 0 };
@@ -83,16 +67,26 @@ export default function Home() {
 	}, [started, quoteLoading]);
 
 	useEffect(() => {
+		const endGame = () => {
+			setStarted(false);
+			setFinished(true);
+			clearTimer();
+		};
+
 		if (userInput.length === fullText.length && fullText.length > 0) {
 			endGame();
 		}
-	}, [userInput, fullText]);
+	}, [userInput, fullText, clearTimer]);
 
 	useEffect(() => {
 		if (finished) {
-			const past = JSON.parse(localStorage.getItem("history") || "[]");
-			const updated = [...past, { time, ...stats }];
-			localStorage.setItem("history", JSON.stringify(updated));
+			try {
+				const past = JSON.parse(localStorage.getItem("history") || "[]");
+				const updated = [...past, { time, ...stats }];
+				localStorage.setItem("history", JSON.stringify(updated));
+			} catch (err) {
+				console.error("Failed to update history in localStorage", err);
+			}
 		}
 	}, [finished, stats, time]);
 
@@ -106,18 +100,17 @@ export default function Home() {
 	}, []);
 
 	const handleInputChange = useCallback(
-		(e: ChangeEvent<HTMLInputElement>) => {
+		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const value = e.target.value;
 			setUserInput(value);
 
-			// Count correct chars
 			let correct = 0;
 			for (let i = 0; i < value.length; i++) {
 				if (value[i] === fullText[i]) correct++;
 			}
 			setCorrectChars(correct);
 		},
-		[fullText],
+		[fullText]
 	);
 
 	const handleGoBack = () => {
@@ -126,8 +119,8 @@ export default function Home() {
 		setFullText("");
 		setUserInput("");
 		setCorrectChars(0);
-		setTime(0);
 		setWordsCount(25);
+		clearTimer();
 	};
 
 	if (quoteLoading) {
@@ -200,7 +193,7 @@ export default function Home() {
 								style={{
 									width: `${Math.min(
 										(userInput.length / fullText.length) * 100,
-										100,
+										100
 									)}%`,
 								}}
 							/>
