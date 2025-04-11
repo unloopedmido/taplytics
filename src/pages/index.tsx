@@ -15,7 +15,7 @@ export default function Home() {
 	const [finished, setFinished] = useState(false);
 	const [quoteLoading, setQuoteLoading] = useState(false);
 
-	const { time, clearTimer, startTimer } = useTimer();
+	const { time, clearTimer, startTimer, setTime } = useTimer();
 
 	const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -47,6 +47,7 @@ export default function Home() {
 		setFinished(false);
 		setUserInput("");
 		setCorrectChars(0);
+		setTime(0);
 		startTimer();
 		void generateWords();
 		inputRef.current?.focus();
